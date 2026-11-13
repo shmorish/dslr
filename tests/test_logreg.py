@@ -6,7 +6,8 @@ import pytest
 
 from conftest import TEST, TRAIN
 from dslr.io import HOUSES, load_houses
-from dslr.model import ALGOS, FEATURES, check_model, gradient_descent, predict, sigmoid, train
+from dslr.model import (ALGOS, FEATURES, check_model, gradient_descent, log_loss, predict, sigmoid,
+                        train)
 
 
 @pytest.fixture(scope="module")
@@ -21,11 +22,6 @@ def split(cols, houses, seed=0):
     return pick(idx[:cut]), pick(idx[cut:])
 
 
-def log_loss(X, y, theta):
-    h = sigmoid(X @ theta)
-    return -np.mean(y * np.log(h) + (1 - y) * np.log(1 - h))
-
-
 def test_sigmoid():
     assert sigmoid(0) == 0.5
     assert sigmoid(np.array([-50, 50])) == pytest.approx([0, 1], abs=1e-12)
@@ -36,15 +32,18 @@ def test_gradient_descent_reduces_loss_on_separable_data(algo):
     rng = np.random.default_rng(1)
     X = np.hstack([np.ones((200, 1)), rng.normal(size=(200, 2))])
     y = (X[:, 1] + X[:, 2] > 0).astype(float)
-    theta = gradient_descent(X, y, algo)
+    theta, history = gradient_descent(X, y, algo)
     assert log_loss(X, y, theta) < log_loss(X, y, np.zeros(3)) / 2
+    assert history[0] == (0, pytest.approx(np.log(2)))
+    assert history[-1] == (ALGOS[algo][1], pytest.approx(log_loss(X, y, theta)))
+    assert [j for _, j in history] == sorted([j for _, j in history], reverse=True)
     assert np.mean((X @ theta > 0) == y) > 0.95
 
 
 def test_gradient_descent_is_deterministic():
     X = np.hstack([np.ones((50, 1)), np.arange(50).reshape(-1, 1) / 50])
     y = (np.arange(50) > 25).astype(float)
-    assert np.array_equal(gradient_descent(X, y, "sgd"), gradient_descent(X, y, "sgd"))
+    assert np.array_equal(gradient_descent(X, y, "sgd")[0], gradient_descent(X, y, "sgd")[0])
 
 
 @pytest.mark.parametrize("algo", ALGOS)
@@ -93,6 +92,7 @@ def test_cli_train_then_predict(run, tmp_path):
 def test_cli_train_algos(run, algo):
     r = run("logreg/logreg_train.py", TRAIN, algo)
     assert r.returncode == 0 and f"[{algo}]" in r.stdout
+    assert all(f"{h:<11} loss 0.6931 -> " in r.stdout for h in HOUSES)
 
 
 @pytest.mark.parametrize("script, args", [

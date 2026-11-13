@@ -15,6 +15,8 @@ def main():
     cols = {f: [v[i] for i in keep] for f, v in cols.items()}
     houses = [houses[i] for i in keep]
     model = train(cols, houses, algo)
+    for h, history in model["loss"].items():
+        print(f"{h:<11} loss " + " -> ".join(f"{j:.4f}" for _, j in history) + f"  (epochs {history[-1][0]})")
     with open("weights.json", "w") as f:
         json.dump(model, f, indent=2)
     acc = sum(p == h for p, h in zip(predict(model, cols), houses)) / len(houses)

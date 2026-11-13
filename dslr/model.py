@@ -28,17 +28,29 @@ def prepare(cols, features, means, stds):
 ALGOS = {"batch": (0.5, 1000, None), "minibatch": (0.1, 100, 32), "sgd": (0.01, 20, 1)}
 
 
+def log_loss(X, y, theta):
+    """J(θ) = −(1/m) Σ [y log h + (1−y) log(1−h)], clipped so log never sees 0."""
+    h = np.clip(sigmoid(X @ theta), 1e-15, 1 - 1e-15)
+    return float(-(y * np.log(h) + (1 - y) * np.log(1 - h)).sum() / len(y))
+
+
 def gradient_descent(X, y, algo="batch"):
-    """Minimize the log loss J(θ) with dJ/dθ = Xᵀ(g(Xθ) − y) / m, over all rows or shuffled batches."""
+    """Minimize J(θ) with dJ/dθ = Xᵀ(g(Xθ) − y) / m, over all rows or shuffled batches.
+
+    Returns (θ, [(epoch, J)]) with J recorded at the start, every 1/5 of training and the end.
+    """
     lr, epochs, size = ALGOS[algo]
     rng = np.random.default_rng(0)
     theta = np.zeros(X.shape[1])
-    for _ in range(epochs):
+    history = [(0, log_loss(X, y, theta))]
+    for epoch in range(1, epochs + 1):
         order = rng.permutation(len(y)) if size else np.arange(len(y))
         for start in range(0, len(y), size or len(y)):
             b = order[start:start + (size or len(y))]
             theta -= lr * X[b].T @ (sigmoid(X[b] @ theta) - y[b]) / len(b)
-    return theta
+        if epoch % (epochs // 5) == 0:
+            history.append((epoch, log_loss(X, y, theta)))
+    return theta, history
 
 
 def train(cols, houses, algo="batch"):
@@ -50,8 +62,11 @@ def train(cols, houses, algo="batch"):
     stds = {f: std([v for v in cols[f] if v is not None]) or 1.0 for f in FEATURES}
     X = prepare(cols, FEATURES, means, stds)
     labels = np.array(houses)
-    thetas = {h: gradient_descent(X, (labels == h).astype(float), algo).tolist() for h in HOUSES}
-    return {"features": FEATURES, "means": means, "stds": stds, "thetas": thetas}
+    thetas, losses = {}, {}
+    for h in HOUSES:
+        theta, losses[h] = gradient_descent(X, (labels == h).astype(float), algo)
+        thetas[h] = theta.tolist()
+    return {"features": FEATURES, "means": means, "stds": stds, "thetas": thetas, "loss": losses}
 
 
 def check_model(model):

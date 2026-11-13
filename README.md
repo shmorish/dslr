@@ -13,6 +13,7 @@ uv run pytest                # テスト
 - Python 3.13（`.python-version`）と uv 0.13.1 を、ローカル・CI・devcontainer でそろえている
 - devcontainer: VS Code の「Reopen in Container」か `devcontainer up --workspace-folder .`。コンテナ内には画面がないので、可視化スクリプトには保存先の PNG パスを渡す
 - CI: pytest と学習→予測の通し実行、`actions.lock` の検証。action を変えたら `gh actions-lock` で lockfile を更新する
+- Dependabot が action の更新 PR を週1で作り、同じ PR で `actions.lock` も更新する
 
 ## 構成
 
@@ -35,7 +36,7 @@ tests/           pytest
 |---|---|---|
 | `visualization/histogram.py` | 4寮で成績分布が均質な科目は？ | Arithmancy / Care of Magical Creatures |
 | `visualization/scatter_plot.py` | 似ている2特徴量は？ | Astronomy と Defense Against the Dark Arts（相関 -1） |
-| `visualization/pair_plot.py` | ロジスティック回帰に使う特徴量は？ | 上の3つ（均質2科目と重複1科目）を除いた10科目 |
+| `visualization/pair_plot.py` | ロジスティック回帰に使う特徴量は？ | 上の3つ（均質2科目と重複1科目）を除いた10科目。図でも使う科目は黒、除外した科目はグレーのラベルで示す |
 
 ## ロジスティック回帰（one-vs-all）
 
@@ -45,7 +46,10 @@ uv run python logreg/logreg_predict.py datasets/dataset_test.csv weights.json  #
 ```
 
 - 前処理: 欠損値は学習データの平均で補完し、標準化する（平均・標準偏差は weights.json に保存）
-- 学習: 寮ごとに sigmoid + log loss を勾配降下で最小化（lr 0.5, 1000 epoch）
+- 学習: 寮ごとに sigmoid + log loss を勾配降下で最小化（lr 0.5, 1000 epoch）。損失の推移を寮ごとに表示し、weights.json の `loss` にも残す
+  ```
+  Gryffindor  loss 0.6931 -> 0.0491 -> 0.0467 -> 0.0459 -> 0.0454 -> 0.0451  (epochs 1000)
+  ```
 - 予測: 4つのモデルのスコアが最大の寮
 - 精度: 学習データ 98.2%（残りは寮の塊から外れたラベルノイズ）、test 99.0%
 
@@ -60,7 +64,7 @@ uv run python logreg/logreg_predict.py datasets/dataset_test.csv weights.json  #
 - `count` / `mean` / `std` / `min` / `max` / `percentile` / ソートはすべて `dslr/stats.py` に自前で実装し、組み込みの `sum` / `sorted` / `len` などの集計関数は使っていない
 - Std は標本標準偏差（n−1 で割る）、percentile は線形補間で、どちらも pandas の describe と同じ定義
 - 空欄・`nan`・`inf` は欠損として扱い、Count から除く（欠損数はボーナス項目の Missing に出す）
-- `Index` は行番号であって特徴量ではないので除外している
+- 出力する列は `pandas.read_csv(...).describe()` と同じ。`Index` も、test の空欄だけの `Hogwarts House`（Count 0）も出す。値の桁が大きくても列がくっつかないよう、列幅は整形後の文字数から決める
 
 ### ロジスティック回帰
 - 仮説 `h(x) = g(θᵀx)`、`g(z) = 1 / (1 + e^(−z))` で、出力は「その寮である確率」
