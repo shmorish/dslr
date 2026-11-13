@@ -8,6 +8,12 @@ uv run python analysis/describe.py datasets/dataset_train.csv
 uv run pytest                # テスト
 ```
 
+## 環境
+
+- Python 3.13（`.python-version`）と uv 0.13.1 を、ローカル・CI・devcontainer でそろえている
+- devcontainer: VS Code の「Reopen in Container」か `devcontainer up --workspace-folder .`。コンテナ内には画面がないので、可視化スクリプトには保存先の PNG パスを渡す
+- CI: pytest と学習→予測の通し実行、`actions.lock` の検証。action を変えたら `gh actions-lock` で lockfile を更新する
+
 ## 構成
 
 ```

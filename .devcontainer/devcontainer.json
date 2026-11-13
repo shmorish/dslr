@@ -1,0 +1,18 @@
+{
+  "name": "dslr",
+  "build": { "dockerfile": "Dockerfile" },
+  "containerEnv": {
+    // keep the Linux venv out of the bind-mounted repo so it never clashes with a host .venv
+    "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venv",
+    "UV_LINK_MODE": "copy",
+    // no display in the container: pass an output path to the plot scripts to save PNGs
+    "MPLBACKEND": "Agg"
+  },
+  "postCreateCommand": "uv sync --locked",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"],
+      "settings": { "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python" }
+    }
+  }
+}
