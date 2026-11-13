@@ -6,7 +6,7 @@ import pytest
 
 from conftest import TEST, TRAIN
 from dslr.io import HOUSES, load_houses
-from dslr.model import ALGOS, FEATURES, gradient_descent, predict, sigmoid, train
+from dslr.model import ALGOS, FEATURES, check_model, gradient_descent, predict, sigmoid, train
 
 
 @pytest.fixture(scope="module")
@@ -118,4 +118,24 @@ def test_cli_predict_missing_weights(run):
 def test_cli_predict_missing_feature_column(run, tmp_path, write_csv):
     assert run("logreg/logreg_train.py", TRAIN).returncode == 0
     r = run("logreg/logreg_predict.py", write_csv("Index,Astronomy\n0,1\n"), "weights.json")
-    assert r.returncode != 0 and "missing feature columns" in r.stderr
+    assert r.returncode != 0 and "missing numeric columns" in r.stderr
+
+
+@pytest.mark.parametrize("weights", ["{}", "[]", '{"features": ["A"]}', "null",
+                                     '{"features": ["A"], "means": {"A": 0}, "stds": {"A": 1}, "thetas": {}}'])
+def test_cli_predict_rejects_malformed_model(run, write_csv, weights):
+    r = run("logreg/logreg_predict.py", TEST, write_csv(weights, "w.json"))
+    assert r.returncode != 0 and "trained model" in r.stderr and "Traceback" not in r.stderr
+
+
+def test_check_model_accepts_trained_model(data):
+    assert check_model(train(*data)) is None
+
+
+def test_constant_feature_does_not_produce_nan(data):
+    cols, houses = data
+    cols = {**cols, "Potions": [1.0] * len(houses)}
+    model = train(cols, houses)
+    assert model["stds"]["Potions"] == 1.0
+    assert all(np.isfinite(t).all() for t in model["thetas"].values())
+    assert set(predict(model, cols)) <= set(HOUSES)

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from dslr.io import numeric_columns, to_float
-from dslr.stats import count, maximum, mean, minimum, percentile, skew, std, var
+from dslr.stats import count, maximum, mean, minimum, percentile, skew, sort, std, var
 
 XS = [3.0, -1.5, 7.25, 0.0, 2.0, 2.0, 10.0]
 
@@ -69,3 +69,17 @@ def test_numeric_columns_drops_all_empty_column():
 def test_numeric_columns_handles_short_rows():
     cols = numeric_columns(["A", "B"], [["1"], ["2", "3"]])
     assert cols == {"A": [1.0, 2.0], "B": [None, 3.0]}
+
+
+@pytest.mark.parametrize("xs", [[], [1.0], [2, 1], [3, 1, 2, 1, 5, -4, 0.5], list(range(50, 0, -1))])
+def test_sort(xs):
+    assert sort(xs) == sorted(xs)
+
+
+def test_numeric_columns_treats_nan_and_inf_as_missing():
+    cols = numeric_columns(["A"], [["1"], ["nan"], ["inf"], ["-Infinity"], ["2"]])
+    assert cols == {"A": [1.0, None, None, None, 2.0]}
+
+
+def test_numeric_columns_drops_column_of_only_nan():
+    assert numeric_columns(["A", "B"], [["nan", "1"], ["NaN", "2"]]) == {"B": [1.0, 2.0]}

@@ -30,5 +30,11 @@ def test_usage(run, script):
     assert "usage" in run(script).stderr
 
 
+def test_scatter_rejects_missing_columns(run, write_csv):
+    r = run("visualization/scatter_plot.py", write_csv("Hogwarts House,Astronomy\nSlytherin,1\n"), "o.png")
+    assert r.returncode != 0 and "Defense Against the Dark Arts" in r.stderr
+    assert "Traceback" not in r.stderr
+
+
 def test_by_house_filters_house_and_missing():
     assert by_house([1, None, 3, 4], ["G", "G", "S", "G"], "G") == [1, 4]

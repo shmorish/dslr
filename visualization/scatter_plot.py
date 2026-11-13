@@ -2,7 +2,7 @@ import sys
 
 import matplotlib.pyplot as plt
 
-from dslr.io import HOUSES, load_houses
+from dslr.io import HOUSES, load_houses, require_columns
 from dslr.plot import COLORS, show_or_save
 
 # Answer: Astronomy and Defense Against the Dark Arts (correlation -1: DADA = -Astronomy / 100).
@@ -13,6 +13,7 @@ def main():
     if len(sys.argv) not in (2, 3):
         sys.exit("usage: scatter_plot.py dataset_train.csv [out.png]")
     cols, houses = load_houses(sys.argv[1])
+    require_columns(cols, [X, Y], sys.argv[1])
     for h in HOUSES:
         pts = [(x, y) for x, y, hh in zip(cols[X], cols[Y], houses)
                if hh == h and x is not None and y is not None]

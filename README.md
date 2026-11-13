@@ -47,3 +47,20 @@ uv run python logreg/logreg_predict.py datasets/dataset_test.csv weights.json  #
 
 - `analysis/describe.py`: Var / Range / IQR / Skew / Missing（欠損数）を追加
 - `logreg/logreg_train.py dataset_train.csv [batch|minibatch|sgd]`: バッチ GD（既定）、mini-batch GD（32件）、SGD（1件）を選択可。どれも test 99.0%
+
+## 設計メモ（評価で聞かれそうなこと）
+
+### describe
+- `count` / `mean` / `std` / `min` / `max` / `percentile` / ソートはすべて `dslr/stats.py` に自前で実装し、組み込みの `sum` / `sorted` / `len` などの集計関数は使っていない
+- Std は標本標準偏差（n−1 で割る）、percentile は線形補間で、どちらも pandas の describe と同じ定義
+- 空欄・`nan`・`inf` は欠損として扱い、Count から除く（欠損数はボーナス項目の Missing に出す）
+- `Index` は行番号であって特徴量ではないので除外している
+
+### ロジスティック回帰
+- 仮説 `h(x) = g(θᵀx)`、`g(z) = 1 / (1 + e^(−z))` で、出力は「その寮である確率」
+- 損失 `J(θ) = −(1/m) Σ [y log h + (1−y) log(1−h)]`、勾配 `∂J/∂θⱼ = (1/m) Σ (h(xⁱ) − yⁱ) xⱼⁱ` を使い、`θ ← θ − α∇J` で更新する
+- one-vs-all: 寮ごとに「その寮か、それ以外か」の2値分類器を4つ学習し、確率が最大の寮を答えにする
+- 標準化する理由: 科目ごとにスケールが大きく違う（Arithmancy は数万、Potions は一桁）ため、そのままだと勾配がスケールの大きい特徴に引っ張られて収束しない
+- 欠損値は学習データの平均で埋める。行を捨てると予測時に答えを出せない生徒が出るため
+- 特徴量の選び方: ヒストグラムで寮ごとの差がない2科目（Arithmancy / Care of Magical Creatures）と、散布図で Astronomy と完全相関の Defense Against the Dark Arts を除いた
+- Batch GD は全データで1回更新、mini-batch は32件ごと、SGD は1件ごとに更新する。後者ほど1回の更新は粗いが更新回数が多く、少ないエポックで収束する

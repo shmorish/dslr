@@ -62,6 +62,18 @@ def test_cli_no_numeric_features(run, write_csv):
     assert r.returncode != 0 and "no numerical features" in r.stderr
 
 
+def test_cli_undecodable_file(run, tmp_path):
+    p = tmp_path / "bin.csv"
+    p.write_bytes(b"\xff\xfe\x00binary")
+    r = run("analysis/describe.py", p)
+    assert r.returncode != 0 and "cannot read" in r.stderr and "Traceback" not in r.stderr
+
+
+def test_cli_directory(run, tmp_path):
+    r = run("analysis/describe.py", tmp_path)
+    assert r.returncode != 0 and "cannot read" in r.stderr
+
+
 def test_cli_empty_file(run, write_csv):
     r = run("analysis/describe.py", write_csv(""))
     assert r.returncode != 0 and "empty" in r.stderr

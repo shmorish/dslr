@@ -15,7 +15,7 @@ def main():
     cols, houses = load_houses(sys.argv[1])
     names = list(cols)
     n = len(names)
-    fig, axes = plt.subplots(n, n, figsize=(2 * n, 2 * n))
+    fig, axes = plt.subplots(n, n, figsize=(12, 12))
     for i, yname in enumerate(names):
         for j, xname in enumerate(names):
             ax = axes[i][j]
@@ -29,9 +29,9 @@ def main():
             ax.set_xticks([])
             ax.set_yticks([])
             if i == n - 1:
-                ax.set_xlabel(xname[:12], fontsize=7)
+                ax.set_xlabel(xname[:12], fontsize=6)
             if j == 0:
-                ax.set_ylabel(yname[:12], fontsize=7)
+                ax.set_ylabel(yname[:12], fontsize=6)
     fig.legend(handles=[plt.Line2D([], [], marker="o", ls="", color=COLORS[h], label=h) for h in HOUSES],
                loc="upper right")
     fig.tight_layout()

@@ -8,6 +8,6 @@ def by_house(values, houses, house):
 def show_or_save(plt, argv):
     """Show the figure, or save it to argv[2] when given (useful headless)."""
     if len(argv) > 2:
-        plt.savefig(argv[2])
+        plt.savefig(argv[2], dpi=200)
     else:
         plt.show()
