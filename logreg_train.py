@@ -24,15 +24,24 @@ def prepare(cols, means, stds):
     return np.hstack([np.ones((len(X), 1)), X])
 
 
-def gradient_descent(X, y, lr=0.5, epochs=1000):
-    """Minimize the log loss J(θ) with dJ/dθ = Xᵀ(g(Xθ) − y) / m."""
+# name: (learning rate, epochs, batch size; None = whole dataset)
+ALGOS = {"batch": (0.5, 1000, None), "minibatch": (0.1, 100, 32), "sgd": (0.01, 20, 1)}
+
+
+def gradient_descent(X, y, algo="batch"):
+    """Minimize the log loss J(θ) with dJ/dθ = Xᵀ(g(Xθ) − y) / m, over all rows or shuffled batches."""
+    lr, epochs, size = ALGOS[algo]
+    rng = np.random.default_rng(0)
     theta = np.zeros(X.shape[1])
     for _ in range(epochs):
-        theta -= lr * X.T @ (sigmoid(X @ theta) - y) / len(y)
+        order = rng.permutation(len(y)) if size else np.arange(len(y))
+        for start in range(0, len(y), size or len(y)):
+            b = order[start:start + (size or len(y))]
+            theta -= lr * X[b].T @ (sigmoid(X[b] @ theta) - y[b]) / len(b)
     return theta
 
 
-def train(cols, houses):
+def train(cols, houses, algo="batch"):
     for f in FEATURES:
         if f not in cols:
             sys.exit(f"error: missing feature column '{f}'")
@@ -40,7 +49,7 @@ def train(cols, houses):
     stds = {f: std([v for v in cols[f] if v is not None]) for f in FEATURES}
     X = prepare(cols, means, stds)
     labels = np.array(houses)
-    thetas = {h: gradient_descent(X, (labels == h).astype(float)).tolist() for h in HOUSES}
+    thetas = {h: gradient_descent(X, (labels == h).astype(float), algo).tolist() for h in HOUSES}
     return {"features": FEATURES, "means": means, "stds": stds, "thetas": thetas}
 
 
@@ -51,17 +60,19 @@ def predict(model, cols):
 
 
 def main():
-    if len(sys.argv) != 2:
-        sys.exit("usage: logreg_train.py dataset_train.csv")
+    usage = f"usage: logreg_train.py dataset_train.csv [{'|'.join(ALGOS)}]"
+    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] not in ALGOS):
+        sys.exit(usage)
+    algo = sys.argv[2] if len(sys.argv) == 3 else "batch"
     cols, houses = load_houses(sys.argv[1])
     keep = [i for i, h in enumerate(houses) if h in HOUSES]
     cols = {f: [v[i] for i in keep] for f, v in cols.items()}
     houses = [houses[i] for i in keep]
-    model = train(cols, houses)
+    model = train(cols, houses, algo)
     with open("weights.json", "w") as f:
         json.dump(model, f, indent=2)
     acc = sum(p == h for p, h in zip(predict(model, cols), houses)) / len(houses)
-    print(f"weights saved to weights.json (training accuracy {acc:.4f})")
+    print(f"[{algo}] weights saved to weights.json (training accuracy {acc:.4f})")
 
 
 if __name__ == "__main__":

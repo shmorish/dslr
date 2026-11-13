@@ -27,3 +27,8 @@ uv run python logreg_predict.py datasets/dataset_test.csv weights.json  # -> hou
 - 学習: 寮ごとに sigmoid + log loss を勾配降下で最小化（lr 0.5, 1000 epoch）
 - 予測: 4つのモデルのスコアが最大の寮
 - 精度: 学習データ 98.2%（残りは寮の塊から外れたラベルノイズ）、test 99.0%
+
+## ボーナス
+
+- `describe.py`: Var / Range / IQR / Skew / Missing（欠損数）を追加
+- `logreg_train.py dataset_train.csv [batch|minibatch|sgd]`: バッチ GD（既定）、mini-batch GD（32件）、SGD（1件）を選択可。どれも test 99.0%
