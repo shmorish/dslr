@@ -1,1 +1,7 @@
 en.subject.pdf
+.venv/
+__pycache__/
+weights.json
+houses.csv
+*.png
+datasets.tgz
