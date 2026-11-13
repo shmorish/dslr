@@ -2,8 +2,8 @@ import csv
 import json
 import sys
 
-from logreg_train import predict
-from utils import load_csv, numeric_columns
+from dslr.model import predict
+from dslr.io import load_csv, numeric_columns
 
 
 def main():

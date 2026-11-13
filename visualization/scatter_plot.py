@@ -2,7 +2,8 @@ import sys
 
 import matplotlib.pyplot as plt
 
-from utils import COLORS, HOUSES, load_houses, show_or_save
+from dslr.io import HOUSES, load_houses
+from dslr.plot import COLORS, show_or_save
 
 # Answer: Astronomy and Defense Against the Dark Arts (correlation -1: DADA = -Astronomy / 100).
 X, Y = "Astronomy", "Defense Against the Dark Arts"

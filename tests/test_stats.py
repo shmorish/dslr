@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from utils import (count, maximum, mean, minimum, numeric_columns, percentile, skew, std,
-                   to_float, var)
+from dslr.io import numeric_columns, to_float
+from dslr.stats import count, maximum, mean, minimum, percentile, skew, std, var
 
 XS = [3.0, -1.5, 7.25, 0.0, 2.0, 2.0, 10.0]
 

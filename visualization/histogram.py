@@ -2,7 +2,8 @@ import sys
 
 import matplotlib.pyplot as plt
 
-from utils import COLORS, HOUSES, by_house, load_houses, show_or_save
+from dslr.io import HOUSES, load_houses
+from dslr.plot import COLORS, by_house, show_or_save
 
 # Answer: Arithmancy and Care of Magical Creatures — the four houses overlap almost exactly.
 HOMOGENEOUS = ["Arithmancy", "Care of Magical Creatures"]

@@ -1,9 +1,9 @@
-import json
 import sys
 
 import numpy as np
 
-from utils import HOUSES, load_houses, mean, std
+from dslr.io import HOUSES
+from dslr.stats import mean, std
 
 # Chosen from pair_plot: drop Arithmancy / Care of Magical Creatures (no house signal)
 # and Defense Against the Dark Arts (exact duplicate of Astronomy).
@@ -57,23 +57,3 @@ def predict(model, cols):
     X = prepare(cols, model["means"], model["stds"])
     scores = np.array([X @ np.array(model["thetas"][h]) for h in HOUSES])
     return [HOUSES[i] for i in scores.argmax(axis=0)]
-
-
-def main():
-    usage = f"usage: logreg_train.py dataset_train.csv [{'|'.join(ALGOS)}]"
-    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] not in ALGOS):
-        sys.exit(usage)
-    algo = sys.argv[2] if len(sys.argv) == 3 else "batch"
-    cols, houses = load_houses(sys.argv[1])
-    keep = [i for i, h in enumerate(houses) if h in HOUSES]
-    cols = {f: [v[i] for i in keep] for f, v in cols.items()}
-    houses = [houses[i] for i in keep]
-    model = train(cols, houses, algo)
-    with open("weights.json", "w") as f:
-        json.dump(model, f, indent=2)
-    acc = sum(p == h for p, h in zip(predict(model, cols), houses)) / len(houses)
-    print(f"[{algo}] weights saved to weights.json (training accuracy {acc:.4f})")
-
-
-if __name__ == "__main__":
-    main()

@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 
 from conftest import TEST, TRAIN
-from logreg_train import ALGOS, FEATURES, gradient_descent, predict, sigmoid, train
-from utils import HOUSES, load_houses
+from dslr.io import HOUSES, load_houses
+from dslr.model import ALGOS, FEATURES, gradient_descent, predict, sigmoid, train
 
 
 @pytest.fixture(scope="module")
@@ -75,11 +75,11 @@ def test_train_rejects_missing_feature(data):
 
 
 def test_cli_train_then_predict(run, tmp_path):
-    r = run("logreg_train.py", TRAIN)
+    r = run("logreg/logreg_train.py", TRAIN)
     assert r.returncode == 0, r.stderr
     assert json.loads((tmp_path / "weights.json").read_text())["features"] == FEATURES
 
-    r = run("logreg_predict.py", TEST, "weights.json")
+    r = run("logreg/logreg_predict.py", TEST, "weights.json")
     assert r.returncode == 0, r.stderr
     with open(tmp_path / "houses.csv", newline="") as f:
         rows = list(csv.reader(f))
@@ -91,14 +91,14 @@ def test_cli_train_then_predict(run, tmp_path):
 
 @pytest.mark.parametrize("algo", ALGOS)
 def test_cli_train_algos(run, algo):
-    r = run("logreg_train.py", TRAIN, algo)
+    r = run("logreg/logreg_train.py", TRAIN, algo)
     assert r.returncode == 0 and f"[{algo}]" in r.stdout
 
 
 @pytest.mark.parametrize("script, args", [
-    ("logreg_train.py", ()),
-    ("logreg_train.py", (TRAIN, "adam")),
-    ("logreg_predict.py", (TEST,)),
+    ("logreg/logreg_train.py", ()),
+    ("logreg/logreg_train.py", (TRAIN, "adam")),
+    ("logreg/logreg_predict.py", (TEST,)),
 ])
 def test_cli_usage(run, script, args):
     r = run(script, *args)
@@ -106,16 +106,16 @@ def test_cli_usage(run, script, args):
 
 
 def test_cli_predict_bad_weights(run, write_csv):
-    r = run("logreg_predict.py", TEST, write_csv("{not json", "w.json"))
+    r = run("logreg/logreg_predict.py", TEST, write_csv("{not json", "w.json"))
     assert r.returncode != 0 and "cannot load weights" in r.stderr
 
 
 def test_cli_predict_missing_weights(run):
-    r = run("logreg_predict.py", TEST, "nope.json")
+    r = run("logreg/logreg_predict.py", TEST, "nope.json")
     assert r.returncode != 0 and "cannot load weights" in r.stderr
 
 
 def test_cli_predict_missing_feature_column(run, tmp_path, write_csv):
-    assert run("logreg_train.py", TRAIN).returncode == 0
-    r = run("logreg_predict.py", write_csv("Index,Astronomy\n0,1\n"), "weights.json")
+    assert run("logreg/logreg_train.py", TRAIN).returncode == 0
+    r = run("logreg/logreg_predict.py", write_csv("Index,Astronomy\n0,1\n"), "weights.json")
     assert r.returncode != 0 and "missing feature columns" in r.stderr
