@@ -2,8 +2,8 @@ import csv
 import json
 import sys
 
-from dslr.model import predict
-from dslr.io import load_csv, numeric_columns
+from dslr.io import load_csv, numeric_columns, require_columns
+from dslr.model import check_model, predict
 
 
 def main():
@@ -13,12 +13,12 @@ def main():
     try:
         with open(sys.argv[2]) as f:
             model = json.load(f)
-    except (OSError, json.JSONDecodeError) as e:
+    except (OSError, ValueError) as e:
         sys.exit(f"error: cannot load weights: {e}")
+    if error := check_model(model):
+        sys.exit(f"error: {error}")
     cols = numeric_columns(header, rows)
-    missing = [f for f in model["features"] if f not in cols]
-    if missing:
-        sys.exit(f"error: missing feature columns {missing}")
+    require_columns(cols, model["features"], sys.argv[1])
     index = header.index("Index") if "Index" in header else None
     with open("houses.csv", "w", newline="") as f:
         w = csv.writer(f, lineterminator="\n")

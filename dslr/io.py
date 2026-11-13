@@ -1,4 +1,5 @@
 import csv
+import math
 import sys
 
 HOUSES = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]
@@ -9,8 +10,8 @@ def load_csv(path):
     try:
         with open(path, newline="") as f:
             rows = list(csv.reader(f))
-    except OSError as e:
-        sys.exit(f"error: {e}")
+    except (OSError, UnicodeDecodeError, csv.Error) as e:
+        sys.exit(f"error: cannot read {path}: {e}")
     if not rows:
         sys.exit(f"error: {path} is empty")
     return rows[0], rows[1:]
@@ -23,17 +24,24 @@ def to_float(s):
         return None
 
 
+def is_missing(cell):
+    """Empty, nan and inf cells carry no usable value."""
+    if cell == "":
+        return True
+    f = to_float(cell)
+    return f is not None and not math.isfinite(f)
+
+
 def numeric_columns(header, rows):
-    """{name: [float|None]} for every column whose non-empty values all parse as numbers."""
+    """{name: [float|None]} for every column whose non-missing values all parse as numbers."""
     cols = {}
     for j, name in enumerate(header):
         if name == "Index":
             continue
-        values = [to_float(r[j]) if j < len(r) and r[j] != "" else None for r in rows]
-        non_empty = sum(1 for r in rows if j < len(r) and r[j] != "")
-        parsed = [v for v in values if v is not None]
-        if parsed and len(parsed) == non_empty:
-            cols[name] = values
+        cells = [r[j] if j < len(r) else "" for r in rows]
+        present = [c for c in cells if not is_missing(c)]
+        if present and all(to_float(c) is not None for c in present):
+            cols[name] = [None if is_missing(c) else to_float(c) for c in cells]
     return cols
 
 
@@ -47,3 +55,9 @@ def load_houses(path):
     if not any(h in HOUSES for h in houses):
         sys.exit(f"error: {path} has no house labels")
     return numeric_columns(header, rows), houses
+
+
+def require_columns(cols, names, path):
+    missing = [n for n in names if n not in cols]
+    if missing:
+        sys.exit(f"error: {path} is missing numeric columns {missing}")

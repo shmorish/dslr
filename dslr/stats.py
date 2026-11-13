@@ -14,7 +14,10 @@ def mean(xs):
 
 def var(xs):
     m = mean(xs)
-    return sum((x - m) ** 2 for x in xs) / (count(xs) - 1)
+    total = 0.0
+    for x in xs:
+        total += (x - m) ** 2
+    return total / (count(xs) - 1)
 
 
 def std(xs):
@@ -37,12 +40,31 @@ def maximum(xs):
     return hi
 
 
+def sort(xs):
+    """Merge sort returning a new list."""
+    n = count(xs)
+    if n <= 1:
+        return list(xs)
+    left, right = sort(xs[:n // 2]), sort(xs[n // 2:])
+    nl, nr = count(left), count(right)
+    out, i, j = [], 0, 0
+    while i < nl and j < nr:
+        if left[i] <= right[j]:
+            out.append(left[i])
+            i += 1
+        else:
+            out.append(right[j])
+            j += 1
+    return out + left[i:] + right[j:]
+
+
 def percentile(xs, p):
     """Linear interpolation between closest ranks (same as numpy/pandas default)."""
-    s = sorted(xs)
-    k = (count(s) - 1) * p / 100
+    s = sort(xs)
+    n = count(s)
+    k = (n - 1) * p / 100
     lo = int(k)
-    hi = lo + 1 if lo + 1 < count(s) else lo
+    hi = lo + 1 if lo + 1 < n else lo
     return s[lo] + (s[hi] - s[lo]) * (k - lo)
 
 
