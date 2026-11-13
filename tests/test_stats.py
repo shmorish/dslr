@@ -66,6 +66,12 @@ def test_numeric_columns_drops_all_empty_column():
     assert set(cols) == {"A"}
 
 
+def test_numeric_columns_pandas_like_keeps_index_and_empty_columns():
+    cols = numeric_columns(["Index", "E", "T", "A"], [["0", "", "x", "1"], ["1", "", "y", "2"]],
+                           pandas_like=True)
+    assert cols == {"Index": [0.0, 1.0], "E": [None, None], "A": [1.0, 2.0]}
+
+
 def test_numeric_columns_handles_short_rows():
     cols = numeric_columns(["A", "B"], [["1"], ["2", "3"]])
     assert cols == {"A": [1.0, 2.0], "B": [None, 3.0]}

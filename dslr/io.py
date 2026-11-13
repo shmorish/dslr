@@ -32,15 +32,19 @@ def is_missing(cell):
     return f is not None and not math.isfinite(f)
 
 
-def numeric_columns(header, rows):
-    """{name: [float|None]} for every column whose non-missing values all parse as numbers."""
+def numeric_columns(header, rows, pandas_like=False):
+    """{name: [float|None]} for every column whose non-missing values all parse as numbers.
+
+    Features only by default. pandas_like also keeps Index and all-empty columns,
+    which pandas.read_csv(...).describe() reports too.
+    """
     cols = {}
     for j, name in enumerate(header):
-        if name == "Index":
+        if name == "Index" and not pandas_like:
             continue
         cells = [r[j] if j < len(r) else "" for r in rows]
         present = [c for c in cells if not is_missing(c)]
-        if present and all(to_float(c) is not None for c in present):
+        if (present or pandas_like) and all(to_float(c) is not None for c in present):
             cols[name] = [None if is_missing(c) else to_float(c) for c in cells]
     return cols
 

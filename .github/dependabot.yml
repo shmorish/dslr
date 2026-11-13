@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # bumps workflow actions; Dependabot also refreshes .github/workflows/actions.lock in the same PR
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

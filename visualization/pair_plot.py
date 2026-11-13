@@ -3,10 +3,12 @@ import sys
 import matplotlib.pyplot as plt
 
 from dslr.io import HOUSES, load_houses
+from dslr.model import FEATURES
 from dslr.plot import COLORS, by_house, show_or_save
 
-# Features kept for logistic regression: drop Arithmancy and Care of Magical Creatures
-# (houses indistinguishable) and Defense Against the Dark Arts (duplicate of Astronomy).
+# Features kept for logistic regression (dslr.model.FEATURES): drop Arithmancy and Care of Magical
+# Creatures (houses indistinguishable) and Defense Against the Dark Arts (duplicate of Astronomy).
+# Kept features get black axis labels, dropped ones gray.
 
 
 def main():
@@ -29,12 +31,13 @@ def main():
             ax.set_xticks([])
             ax.set_yticks([])
             if i == n - 1:
-                ax.set_xlabel(xname[:12], fontsize=6)
+                ax.set_xlabel(xname[:12], fontsize=6, color="black" if xname in FEATURES else "gray")
             if j == 0:
-                ax.set_ylabel(yname[:12], fontsize=6)
+                ax.set_ylabel(yname[:12], fontsize=6, color="black" if yname in FEATURES else "gray")
     fig.legend(handles=[plt.Line2D([], [], marker="o", ls="", color=COLORS[h], label=h) for h in HOUSES],
-               loc="upper right")
-    fig.tight_layout()
+               loc="upper center", ncol=4, bbox_to_anchor=(0.5, 0.975))
+    fig.suptitle("Features for logistic regression: black labels (gray = dropped)")
+    fig.tight_layout(rect=(0, 0, 1, 0.955))
     show_or_save(plt, sys.argv)
 
 
