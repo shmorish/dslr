@@ -5,7 +5,7 @@ Harry Potter and the Data Scientist（42 dslr）。Python + uv。
 ```sh
 uv sync
 uv run python describe.py datasets/dataset_train.csv
-uv run python test_dslr.py   # self-check
+uv run pytest                # テスト
 ```
 
 ## 可視化（第2引数に PNG パスを渡すと保存）

@@ -3,3 +3,12 @@ name = "dslr"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = ["numpy", "matplotlib"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
