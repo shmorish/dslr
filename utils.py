@@ -84,3 +84,27 @@ def percentile(xs, p):
     lo = int(k)
     hi = lo + 1 if lo + 1 < count(s) else lo
     return s[lo] + (s[hi] - s[lo]) * (k - lo)
+
+
+def load_houses(path):
+    """(numeric columns, house per row) from a labelled dataset."""
+    header, rows = load_csv(path)
+    if "Hogwarts House" not in header:
+        sys.exit(f"error: {path} has no 'Hogwarts House' column")
+    j = header.index("Hogwarts House")
+    houses = [r[j] for r in rows]
+    if not any(h in HOUSES for h in houses):
+        sys.exit(f"error: {path} has no house labels")
+    return numeric_columns(header, rows), houses
+
+
+def by_house(values, houses, house):
+    return [v for v, h in zip(values, houses) if h == house and v is not None]
+
+
+def show_or_save(plt, argv):
+    """Show the figure, or save it to argv[2] when given (useful headless)."""
+    if len(argv) > 2:
+        plt.savefig(argv[2])
+    else:
+        plt.show()
