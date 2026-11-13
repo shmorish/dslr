@@ -1,6 +1,6 @@
 import sys
 
-from utils import count, load_csv, maximum, mean, minimum, numeric_columns, percentile, std
+from utils import count, load_csv, maximum, mean, minimum, numeric_columns, percentile, skew, std, var
 
 STATS = [
     ("Count", count),
@@ -11,6 +11,11 @@ STATS = [
     ("50%", lambda xs: percentile(xs, 50)),
     ("75%", lambda xs: percentile(xs, 75)),
     ("Max", maximum),
+    # bonus fields
+    ("Var", var),
+    ("Range", lambda xs: maximum(xs) - minimum(xs)),
+    ("IQR", lambda xs: percentile(xs, 75) - percentile(xs, 25)),
+    ("Skew", skew),
 ]
 
 
@@ -19,7 +24,7 @@ def describe(cols):
     table = {}
     for name, values in cols.items():
         xs = [v for v in values if v is not None]
-        table[name] = {}
+        table[name] = {"Missing": float(count(values) - count(xs))}
         for stat, fn in STATS:
             try:
                 table[name][stat] = float(fn(xs))
@@ -37,7 +42,7 @@ def main():
         sys.exit("error: no numerical features")
     widths = {n: max(14, len(n)) + 2 for n in table}
     print(" " * 8 + "".join(n.rjust(w) for n, w in widths.items()))
-    for stat, _ in STATS:
+    for stat in [s for s, _ in STATS] + ["Missing"]:
         print(stat.ljust(8) + "".join(f"{table[n][stat]:{w}.6f}" for n, w in widths.items()))
 
 

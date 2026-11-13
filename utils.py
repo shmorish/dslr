@@ -108,3 +108,8 @@ def show_or_save(plt, argv):
         plt.savefig(argv[2])
     else:
         plt.show()
+
+
+def skew(xs):
+    m, s = mean(xs), std(xs)
+    return mean([((x - m) / s) ** 3 for x in xs])
