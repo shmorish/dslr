@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from conftest import TEST, TRAIN
-from describe import STATS, describe
-from utils import load_csv, numeric_columns
+from dslr.io import load_csv, numeric_columns
+from dslr.stats import STATS, describe
 
 
 def test_matches_numpy_on_train():
@@ -35,7 +35,7 @@ def test_single_value_gives_nan_instead_of_crashing():
 
 
 def test_cli_output_layout(run):
-    r = run("describe.py", TRAIN)
+    r = run("analysis/describe.py", TRAIN)
     assert r.returncode == 0, r.stderr
     lines = r.stdout.splitlines()
     assert "Arithmancy" in lines[0] and "Flying" in lines[0]
@@ -44,7 +44,7 @@ def test_cli_output_layout(run):
 
 
 def test_cli_works_on_unlabelled_test_set(run):
-    r = run("describe.py", TEST)
+    r = run("analysis/describe.py", TEST)
     assert r.returncode == 0 and "Hogwarts" not in r.stdout
 
 
@@ -53,15 +53,15 @@ def test_cli_works_on_unlabelled_test_set(run):
     (("missing.csv",), "error"),
 ])
 def test_cli_errors(run, args, msg):
-    r = run("describe.py", *args)
+    r = run("analysis/describe.py", *args)
     assert r.returncode != 0 and msg in r.stderr
 
 
 def test_cli_no_numeric_features(run, write_csv):
-    r = run("describe.py", write_csv("Index,Name\n0,a\n"))
+    r = run("analysis/describe.py", write_csv("Index,Name\n0,a\n"))
     assert r.returncode != 0 and "no numerical features" in r.stderr
 
 
 def test_cli_empty_file(run, write_csv):
-    r = run("describe.py", write_csv(""))
+    r = run("analysis/describe.py", write_csv(""))
     assert r.returncode != 0 and "empty" in r.stderr

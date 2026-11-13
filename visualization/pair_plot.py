@@ -2,7 +2,8 @@ import sys
 
 import matplotlib.pyplot as plt
 
-from utils import COLORS, HOUSES, by_house, load_houses, show_or_save
+from dslr.io import HOUSES, load_houses
+from dslr.plot import COLORS, by_house, show_or_save
 
 # Features kept for logistic regression: drop Arithmancy and Care of Magical Creatures
 # (houses indistinguishable) and Defense Against the Dark Arts (duplicate of Astronomy).

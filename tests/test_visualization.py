@@ -1,9 +1,9 @@
 import pytest
 
 from conftest import TEST, TRAIN
-from utils import by_house
+from dslr.plot import by_house
 
-SCRIPTS = ["histogram.py", "scatter_plot.py", "pair_plot.py"]
+SCRIPTS = ["visualization/histogram.py", "visualization/scatter_plot.py", "visualization/pair_plot.py"]
 
 
 @pytest.mark.parametrize("script", SCRIPTS)
